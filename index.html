@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Bethina | Gestão de Rentabilidade</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@7.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.5.1/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --gold-gradient: linear-gradient(
+          135deg,
+          #d4af37 0%,
+          #f9f295 50%,
+          #b8860b 100%
+        );
+        --dark-bg: #0f172a;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+      }
+
+      .elegant-header {
+        background: var(--dark-bg) !important;
+        border-bottom: 2px solid #d4af37;
+      }
+
+      .header-title {
+        font-family: "Playfair Display", serif;
+        letter-spacing: 1px;
+        background: var(--gold-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+      }
+
+      .v-card {
+        border-radius: 16px !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+
+      .result-card {
+        background: var(--dark-bg) !important;
+        color: white !important;
+        border: none !important;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .result-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gold-gradient);
+      }
+
+      .resgate-valor {
+        font-family: "Playfair Display", serif;
+        color: #fbbf24;
+        text-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+      }
+
+      .link-btn {
+        text-transform: none !important;
+        letter-spacing: 0;
+        color: #64748b !important;
+        font-size: 0.75rem !important;
+      }
+
+      .v-field__input {
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-app-bar flat class="elegant-header" height="80">
+          <v-container class="d-flex align-center justify-center">
+            <div class="text-center">
+              <div
+                class="text-caption text-grey-lighten-1 text-uppercase"
+                style="letter-spacing: 2px"
+              >
+                Gestão de Rentabilidade
+              </div>
+              <h1 class="header-title text-h5">Bethina Nogueira de Souza</h1>
+            </div>
+          </v-container>
+        </v-app-bar>
+
+        <v-main>
+          <v-container class="pb-10">
+            <v-row>
+              <v-col cols="12">
+                <h2
+                  class="text-subtitle-1 font-weight-bold mb-3 text-slate-700"
+                >
+                  <v-icon start size="small">mdi-wallet-outline</v-icon>Saldos
+                  Atuais
+                </h2>
+                <v-card class="pa-4" elevation="0">
+                  <v-text-field
+                    label="Saldo LCI"
+                    v-model="displayValues.saldoLci"
+                    @input="formatInput('saldoLci', 'currency')"
+                    placeholder="R$ 0,00"
+                    variant="outlined"
+                    color="primary"
+                    prepend-inner-icon="mdi-bank-outline"
+                  ></v-text-field>
+
+                  <v-text-field
+                    label="Saldo Fundo RF"
+                    v-model="displayValues.saldoFundo"
+                    @input="formatInput('saldoFundo', 'currency')"
+                    placeholder="R$ 0,00"
+                    variant="outlined"
+                    color="primary"
+                    class="mt-2"
+                    prepend-inner-icon="mdi-chart-line"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-if="rawValues.saldoFundo > 0"
+                    label="Data da Aplicação (Fundo)"
+                    v-model="carteira.dataAplicacaoFundo"
+                    type="date"
+                    variant="outlined"
+                    hint="Necessário para o cálculo do IR"
+                    persistent-hint
+                    class="mt-2"
+                  ></v-text-field>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <v-row class="mt-2">
+              <v-col cols="12">
+                <h2
+                  class="text-subtitle-1 font-weight-bold mb-3 text-slate-700"
+                >
+                  <v-icon start size="small">mdi-tune-variant</v-icon
+                  >Indicadores do Período
+                </h2>
+                <v-card class="pa-4" elevation="0">
+                  <v-row dense>
+                    <v-col cols="6">
+                      <v-text-field
+                        label="% do CDI (LCI)"
+                        v-model="displayValues.percCdiLci"
+                        @input="formatInput('percCdiLci', 'percent')"
+                        variant="underlined"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        label="Taxa CDI Mês"
+                        v-model="displayValues.cdiMes"
+                        @input="formatInput('cdiMes', 'percent')"
+                        variant="underlined"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+
+                  <v-row dense>
+                    <v-col cols="6">
+                      <v-text-field
+                        label="Rent. Fundo"
+                        v-model="displayValues.rentFundoMes"
+                        @input="formatInput('rentFundoMes', 'percent')"
+                        variant="underlined"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        label="IPCA Mês"
+                        v-model="displayValues.ipcaMes"
+                        @input="formatInput('ipcaMes', 'percent')"
+                        variant="underlined"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+
+                  <div class="d-flex flex-wrap justify-space-between mt-2">
+                    <v-btn
+                      variant="text"
+                      size="x-small"
+                      href="https://investidor10.com.br/indices/cdi/"
+                      target="_blank"
+                      class="link-btn"
+                      >CDI <v-icon>mdi-open-in-new</v-icon></v-btn
+                    >
+                    <v-btn
+                      variant="text"
+                      size="x-small"
+                      href="https://www.caixa.gov.br/fundos-investimento/referenciados/fic-sigma-ref-di-longo-prazo/Paginas/default.aspx"
+                      target="_blank"
+                      class="link-btn"
+                      >Fundo <v-icon>mdi-open-in-new</v-icon></v-btn
+                    >
+                    <v-btn
+                      variant="text"
+                      size="x-small"
+                      href="https://www.dadosdemercado.com.br/indices/ipca"
+                      target="_blank"
+                      class="link-btn"
+                      >IPCA <v-icon>mdi-open-in-new</v-icon></v-btn
+                    >
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <v-row class="mt-4">
+              <v-col cols="12">
+                <v-card class="result-card pa-6 text-center" elevation="8">
+                  <div class="text-overline mb-2" style="color: #d4af37">
+                    Rentabilidade Real da Carteira
+                  </div>
+
+                  <div class="d-flex justify-center align-baseline mb-4">
+                    <span
+                      class="text-h3 font-weight-black"
+                      :class="taxaReal >= 0 ? 'text-white' : 'text-red'"
+                    >
+                      {{ formatPercent(taxaReal, 2) }}
+                    </span>
+                  </div>
+
+                  <v-divider color="white" class="mb-4 opacity-20"></v-divider>
+
+                  <div class="text-body-2 text-grey-lighten-1 mb-1">
+                    Valor máximo de resgate
+                  </div>
+                  <div class="text-h4 resgate-valor font-weight-bold">
+                    {{ formatCurrency(lucroRealMonetario) }}
+                  </div>
+
+                  <div class="mt-4 text-caption text-grey">
+                    IR aplicado ao fundo:
+                    <strong>{{ formatPercent(aliquotaIR, 1) }}</strong>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-main>
+      </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.1/dist/vuetify.min.js"></script>
+
+    <script>
+      const { createApp, computed, reactive } = Vue;
+      const { createVuetify } = Vuetify;
+
+      const vuetify = createVuetify();
+
+      createApp({
+        setup() {
+          const rawValues = reactive({
+            saldoLci: 0,
+            saldoFundo: 0,
+            percCdiLci: 0,
+            cdiMes: 0,
+            rentFundoMes: 0,
+            ipcaMes: 0,
+          });
+
+          const displayValues = reactive({
+            saldoLci: "",
+            saldoFundo: "",
+            percCdiLci: "",
+            cdiMes: "",
+            rentFundoMes: "",
+            ipcaMes: "",
+          });
+
+          const carteira = reactive({
+            dataAplicacaoFundo: "",
+          });
+
+          const formatInput = (field, type) => {
+            let val = displayValues[field].replace(/\D/g, "");
+            if (!val) {
+              rawValues[field] = 0;
+              displayValues[field] = "";
+              return;
+            }
+
+            let numberVal = parseFloat(val) / 100;
+            rawValues[field] = numberVal;
+
+            if (type === "currency") {
+              displayValues[field] = new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(numberVal);
+            } else {
+              displayValues[field] =
+                new Intl.NumberFormat("pt-BR", {
+                  minimumFractionDigits: 2,
+                }).format(numberVal) + "%";
+            }
+          };
+
+          const aliquotaIR = computed(() => {
+            if (!carteira.dataAplicacaoFundo) return 0.225;
+            const hoje = new Date();
+            const aplicacao = new Date(carteira.dataAplicacaoFundo);
+            const dias = Math.ceil(
+              Math.abs(hoje - aplicacao) / (1000 * 60 * 60 * 24)
+            );
+
+            if (dias <= 180) return 0.225;
+            if (dias <= 360) return 0.2;
+            if (dias <= 720) return 0.175;
+            return 0.15;
+          });
+
+          const taxaReal = computed(() => {
+            const saldoTotal = rawValues.saldoLci + rawValues.saldoFundo;
+            if (saldoTotal === 0) return 0;
+
+            // Lucro LCI
+            const lucroLci =
+              rawValues.saldoLci *
+              (rawValues.cdiMes / 100) *
+              (rawValues.percCdiLci / 100);
+
+            // Lucro Líquido Fundo
+            const lucroBrutoFundo =
+              rawValues.saldoFundo * (rawValues.rentFundoMes / 100);
+            const lucroLiquidoFundo = lucroBrutoFundo * (1 - aliquotaIR.value);
+
+            const tNominalTotal = (lucroLci + lucroLiquidoFundo) / saldoTotal;
+            const tInflacao = rawValues.ipcaMes / 100;
+
+            return (1 + tNominalTotal) / (1 + tInflacao) - 1;
+          });
+
+          const lucroRealMonetario = computed(() => {
+            const saldoTotal = rawValues.saldoLci + rawValues.saldoFundo;
+            return Math.max(0, saldoTotal * taxaReal.value);
+          });
+
+          const formatCurrency = (v) =>
+            new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(v);
+
+          // Nova função para formatar porcentagens no template HTML
+          const formatPercent = (v, decimals = 2) => {
+            return (
+              new Intl.NumberFormat("pt-BR", {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+              }).format(v * 100) + "%"
+            );
+          };
+
+          return {
+            carteira,
+            rawValues,
+            displayValues,
+            formatInput,
+            taxaReal,
+            lucroRealMonetario,
+            formatCurrency,
+            formatPercent,
+            aliquotaIR,
+          };
+        },
+      })
+        .use(vuetify)
+        .mount("#app");
+    </script>
+  </body>
+</html>
